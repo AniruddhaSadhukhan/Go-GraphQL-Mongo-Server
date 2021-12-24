@@ -3,6 +3,7 @@ package main
 import (
 	"go-graphql-mongo-server/config"
 	"go-graphql-mongo-server/logger"
+	"go-graphql-mongo-server/models"
 	"go-graphql-mongo-server/routes"
 	"net/http"
 	"strings"
@@ -16,7 +17,7 @@ type Service struct {
 
 func main() {
 	config.InitializeConfig()
-	// models.InitializeDB()
+	models.InitializeDB()
 
 	service := &Service{}
 	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})

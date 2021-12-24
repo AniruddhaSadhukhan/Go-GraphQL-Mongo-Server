@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"go-graphql-mongo-server/auth"
 	"go-graphql-mongo-server/gqlhandler"
 	"net/http"
 
@@ -26,7 +27,7 @@ func register(method, pattern string, handler http.HandlerFunc, middleware mux.M
 }
 
 func setGraphQLRoutes() {
-	register("POST", "/graphql", gqlhandler.GraphqlHandler, nil)
+	register("POST", "/graphql", gqlhandler.GraphqlHandler, auth.AuthMiddleware)
 	register("GET", "/graphiql", gqlhandler.GraphiqlHandler, nil)
 }
 

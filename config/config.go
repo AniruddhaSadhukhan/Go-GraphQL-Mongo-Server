@@ -6,14 +6,17 @@ type Configurations struct {
 	Database
 	CORSAllowOrigins string
 	Port             string
+	SecretToken      string
 }
 
 // Database configuration
 type Database struct {
-	Host     string
-	Name     string
-	User     string
-	Password string
+	Host               string
+	Port               string
+	Name               string
+	Username           string
+	Password           string
+	InsecureSkipVerify bool
 }
 
 var env venv.Env
@@ -28,12 +31,15 @@ func InitializeConfig() {
 func readConfigValues() Configurations {
 	return Configurations{
 		Database: Database{
-			Host:     env.Getenv("DB_HOST"),
-			Name:     env.Getenv("DB_NAME"),
-			User:     env.Getenv("DB_USER"),
-			Password: env.Getenv("DB_PASSWORD"),
+			Host:               env.Getenv("DB_HOST"),
+			Port:               env.Getenv("DB_PORT"),
+			Name:               env.Getenv("DB_NAME"),
+			Username:           env.Getenv("DB_USERNAME"),
+			Password:           env.Getenv("DB_PASSWORD"),
+			InsecureSkipVerify: env.Getenv("DB_INSECURE_SKIP_VERIFY") == "true",
 		},
 		CORSAllowOrigins: env.Getenv("CORS_ALLOW_ORIGINS"),
 		Port:             env.Getenv("PORT"),
+		SecretToken:      env.Getenv("SECRET_TOKEN"),
 	}
 }

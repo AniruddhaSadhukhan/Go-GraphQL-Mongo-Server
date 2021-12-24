@@ -15,7 +15,7 @@ var graphiQlPage = []byte(`
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Simple GraphiQL Example</title>
+    <title>GraphiQL</title>
     <link href="https://unpkg.com/graphiql/graphiql.min.css" rel="stylesheet" />
   </head>
   <body style="margin: 0;">
@@ -35,10 +35,14 @@ var graphiQlPage = []byte(`
     ></script>
 
     <script>
-      const fetcher = GraphiQL.createFetcher({ url: '/graphql' });
+      const fetcher = GraphiQL.createFetcher({ url: '/api/v1/graphql' });
 
       ReactDOM.render(
-        React.createElement(GraphiQL, { fetcher: fetcher }),
+        React.createElement(GraphiQL, { 
+			fetcher: fetcher,
+			docExplorerOpen: true,
+			shouldPersistHeaders: true
+		 }),
         document.getElementById('graphiql'),
       );
     </script>

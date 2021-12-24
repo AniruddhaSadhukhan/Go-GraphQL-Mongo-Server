@@ -1,8 +1,11 @@
 package gqlhandler
 
 import (
+	"context"
 	"encoding/json"
 	"go-graphql-mongo-server/common"
+	"go-graphql-mongo-server/gqlhandler/mutation"
+	"go-graphql-mongo-server/gqlhandler/query"
 	"go-graphql-mongo-server/logger"
 	"go-graphql-mongo-server/models"
 	"io/ioutil"
@@ -16,8 +19,12 @@ var SchemaQl, _ = graphql.NewSchema(graphql.SchemaConfig{
 	Mutation: rootMutation,
 })
 
-var mutationMap = graphql.Fields{}
-var queryMap = graphql.Fields{}
+var mutationMap = graphql.Fields{
+	mutation.UserMutation.Name: mutation.UserMutation,
+}
+var queryMap = graphql.Fields{
+	query.UsersQuery.Name: query.UsersQuery,
+}
 
 var rootMutation = graphql.NewObject(graphql.ObjectConfig{
 	Name:   "Mutation",
@@ -50,7 +57,7 @@ func GraphqlHandler(w http.ResponseWriter, r *http.Request) {
 			Schema:         SchemaQl,
 			RequestString:  request.Query,
 			VariableValues: request.Variables,
-			Context:        ctx,
+			Context:        context.WithValue(ctx, "User", r.Header.Get("User")),
 		})
 
 		resultMap = append(resultMap, result)
