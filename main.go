@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"go-graphql-mongo-server/config"
+	"go-graphql-mongo-server/dbmigration"
 	"go-graphql-mongo-server/logger"
 	"go-graphql-mongo-server/models"
 	"go-graphql-mongo-server/routes"
@@ -16,9 +18,20 @@ type Service struct {
 }
 
 func main() {
+
+	// Initialize config
 	config.InitializeConfig()
+
+	// Initialize Database
 	models.InitializeDB()
 
+	//Run DB Migration
+	err:= dbmigration.RunDbSchemaMigration()
+	if err != nil {
+		panic(fmt.Sprintf("Error while running migration : %v", err))
+	}
+
+	// Configure Server
 	service := &Service{}
 	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"})
@@ -39,7 +52,7 @@ func main() {
 	}
 
 	logger.Log.Info("Starting the server on port ", config.ConfigManager.Port)
-	err := service.HTTPServer.ListenAndServe()
+	err = service.HTTPServer.ListenAndServe()
 	if err != nil {
 		logger.Log.Fatal("Error starting the server", err)
 	}

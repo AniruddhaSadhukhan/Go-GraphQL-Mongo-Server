@@ -21,10 +21,10 @@ var dbName string
 
 func InitializeDB() {
 	logger.Log.Info("Initializing DB")
-	getDbSession()
+	GetDbSession()
 }
 
-func getDbSession() *mongo.Client {
+func GetDbSession() *mongo.Client {
 	once.Do(func() {
 		if dbSession == nil {
 			dbSession = newDatabaseSession(config.ConfigManager.Database)
@@ -64,7 +64,7 @@ func newDatabaseSession(db config.Database) *mongo.Client {
 }
 
 func getCollection(collectionName string) *mongo.Collection {
-	return getDbSession().Database(dbName).Collection(collectionName)
+	return GetDbSession().Database(dbName).Collection(collectionName)
 }
 
 func Insert(collectionName string, document interface{}, ctx context.Context) error {

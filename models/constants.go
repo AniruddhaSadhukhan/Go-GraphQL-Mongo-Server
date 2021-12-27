@@ -9,4 +9,5 @@ const (
 
 	//Collection Names
 	UserCollection = "users"
+	SchemaMigrationCollection = "schema_migrations"
 )
