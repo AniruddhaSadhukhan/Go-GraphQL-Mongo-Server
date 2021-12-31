@@ -7,6 +7,7 @@ type Configurations struct {
 	CORSAllowOrigins string
 	Port             string
 	SecretToken      string
+	JWT_PrivateKey   string
 }
 
 // Database configuration
@@ -41,5 +42,6 @@ func readConfigValues() Configurations {
 		CORSAllowOrigins: env.Getenv("CORS_ALLOW_ORIGINS"),
 		Port:             env.Getenv("PORT"),
 		SecretToken:      env.Getenv("SECRET_TOKEN"),
+		JWT_PrivateKey:   env.Getenv("JWT_PRIVATE_KEY"),
 	}
 }

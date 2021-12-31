@@ -60,7 +60,7 @@ var SubscriptionTypeEnum = graphql.NewEnum(graphql.EnumConfig{
 	},
 })
 
-var UserSchemaInput = graphql.NewInputObject(
+var UserInputSchema = graphql.NewInputObject(
 	graphql.InputObjectConfig{
 		Name: "UserInput",
 		Fields: graphql.InputObjectConfigFieldMap{
@@ -74,7 +74,7 @@ var UserSchemaInput = graphql.NewInputObject(
 				Type: graphql.NewNonNull(graphql.DateTime),
 			},
 			"address": &graphql.InputObjectFieldConfig{
-				Type: graphql.NewNonNull(UserAddressSchemaInput),
+				Type: graphql.NewNonNull(UserAddressInputSchema),
 			},
 			"isVerified": &graphql.InputObjectFieldConfig{
 				Type: graphql.Boolean,
@@ -90,7 +90,7 @@ var UserSchemaInput = graphql.NewInputObject(
 	},
 )
 
-var UserAddressSchemaInput = graphql.NewInputObject(
+var UserAddressInputSchema = graphql.NewInputObject(
 	graphql.InputObjectConfig{
 		Name: "AddressInput",
 		Fields: graphql.InputObjectConfigFieldMap{

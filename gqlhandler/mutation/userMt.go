@@ -16,7 +16,7 @@ var UserMutation = &graphql.Field{
 	Description: "Create multiple users",
 	Args: graphql.FieldConfigArgument{
 		"input": &graphql.ArgumentConfig{
-			Type: graphql.NewNonNull(graphql.NewList(schema.UserSchemaInput)),
+			Type: graphql.NewNonNull(graphql.NewList(schema.UserInputSchema)),
 		},
 	},
 	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
