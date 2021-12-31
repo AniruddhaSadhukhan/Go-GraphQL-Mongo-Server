@@ -21,9 +21,11 @@ var SchemaQl, _ = graphql.NewSchema(graphql.SchemaConfig{
 var mutationMap = graphql.Fields{
 	mutation.UserMutation.Name:        mutation.UserMutation,
 	mutation.CreateTokenMutation.Name: mutation.CreateTokenMutation,
+	mutation.RevokeTokenMutation.Name: mutation.RevokeTokenMutation,
 }
 var queryMap = graphql.Fields{
 	query.UsersQuery.Name: query.UsersQuery,
+	query.TokenQuery.Name: query.TokenQuery,
 }
 
 var rootMutation = graphql.NewObject(graphql.ObjectConfig{

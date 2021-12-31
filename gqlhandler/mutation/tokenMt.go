@@ -9,6 +9,7 @@ import (
 
 	"github.com/graphql-go/graphql"
 	"github.com/mitchellh/mapstructure"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 var CreateTokenMutation = &graphql.Field{
@@ -40,6 +41,32 @@ var CreateTokenMutation = &graphql.Field{
 		err = models.Insert(models.TokenCollection, token, p.Context)
 
 		return token, err
+
+	},
+}
+
+var RevokeTokenMutation = &graphql.Field{
+	Name:        "RevokeToken",
+	Type:        graphql.Boolean,
+	Description: "Revoke a long lived personal access token",
+	Args: graphql.FieldConfigArgument{
+		"tokenName": &graphql.ArgumentConfig{
+			Type: graphql.NewNonNull(graphql.String),
+		},
+	},
+	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+		userName := common.GetUserName(p)
+		logger.Log.Info("Mutation: Revoke Token called by " + userName)
+
+		err := models.Delete(
+			models.TokenCollection,
+			bson.M{"tokenName": p.Args["tokenName"].(string)},
+			p.Context,
+		)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
 
 	},
 }
