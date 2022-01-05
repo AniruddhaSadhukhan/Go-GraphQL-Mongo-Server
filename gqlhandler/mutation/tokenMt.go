@@ -60,7 +60,7 @@ var RevokeTokenMutation = &graphql.Field{
 
 		err := models.Delete(
 			models.TokenCollection,
-			bson.M{"tokenName": p.Args["tokenName"].(string)},
+			bson.M{"tokenName": p.Args["tokenName"].(string), "userName" : userName},
 			p.Context,
 		)
 		if err != nil {
