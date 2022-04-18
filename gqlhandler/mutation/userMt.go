@@ -20,6 +20,16 @@ var UserMutation = &graphql.Field{
 		},
 	},
 	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+
+		if !common.IsInternalUser(p) {
+			return nil, common.ErrUnauthorized
+		}
+
+		_, err := common.Sanitize(p.Args)
+		if err != nil {
+			return nil, err
+		}
+
 		userName := common.GetUserName(p)
 		logger.Log.Info("Mutation: User called by " + userName)
 
@@ -35,7 +45,7 @@ var UserMutation = &graphql.Field{
 		}
 
 		//Insert user
-		err := models.InsertMany(models.UserCollection, userInputInterface, p.Context)
+		err = models.InsertMany(models.UserCollection, userInputInterface, p.Context)
 		return userInput, err
 
 	},

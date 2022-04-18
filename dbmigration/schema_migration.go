@@ -4,13 +4,17 @@ import (
 	"go-graphql-mongo-server/config"
 	"go-graphql-mongo-server/logger"
 	"go-graphql-mongo-server/models"
+	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/mongodb"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // Import the file driver
 )
 
-func RunDbSchemaMigration() error {
+// RunDbSchemaMigration runs the database schema migration
+// Give the relative path prefix to the main package as input
+// Eg: "." or "./" or "", "./.." or "./../" or "../" or "..", "./../.." etc.
+func RunDbSchemaMigration(relativePathPrefixToMainDir string) error {
 
 	dbName := config.ConfigManager.Database.Name
 	mongoDriver, err := mongodb.WithInstance(models.GetDbSession(), &mongodb.Config{
@@ -23,9 +27,14 @@ func RunDbSchemaMigration() error {
 		return err
 	}
 
+	if len(relativePathPrefixToMainDir) > 0 && !strings.HasSuffix(relativePathPrefixToMainDir, "/") {
+		relativePathPrefixToMainDir = relativePathPrefixToMainDir + "/"
+	}
+	migrationPath := "file://" + relativePathPrefixToMainDir + "resources/schema_migrations"
+
 	// Read migrations from resources/schema_migrations and connect to database
 	migrateInstance, err := migrate.NewWithDatabaseInstance(
-		"file://resources/schema_migrations",
+		migrationPath,
 		dbName,
 		mongoDriver,
 	)

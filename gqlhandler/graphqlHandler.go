@@ -3,6 +3,7 @@ package gqlhandler
 import (
 	"encoding/json"
 	"go-graphql-mongo-server/common"
+	"go-graphql-mongo-server/config"
 	"go-graphql-mongo-server/gqlhandler/mutation"
 	"go-graphql-mongo-server/gqlhandler/query"
 	"go-graphql-mongo-server/logger"
@@ -81,6 +82,11 @@ func GraphqlHandler(w http.ResponseWriter, r *http.Request) {
 			response, _ = json.Marshal(resultMap[0])
 		} else {
 			response, _ = json.Marshal(resultMap)
+		}
+
+		// Set HSTS header is HTTPS is enabled
+		if config.ConfigManager.HttpsCert.HttpsEnabled {
+			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		}
 
 		_, err = w.Write(response)

@@ -4,10 +4,11 @@ import "github.com/adammck/venv"
 
 type Configurations struct {
 	Database
-	CORSAllowOrigins string
-	Port             string
-	SecretToken      string
-	JWT_PrivateKey   string
+	Auth
+	HttpsCert
+	CORSAllowOrigins  string
+	ServicePort       string
+	ApiLimitPerSecond string
 }
 
 // Database configuration
@@ -20,28 +21,54 @@ type Database struct {
 	InsecureSkipVerify bool
 }
 
+type Auth struct {
+	JWT_PrivateKey string
+	SecretToken    string
+}
+
+type HttpsCert struct {
+	HttpsEnabled bool
+	CertFilePath string
+	KeyFilePath  string
+}
+
 var env venv.Env
 var ConfigManager Configurations
 
 //Set environment variables
-func InitializeConfig() {
-	env = venv.OS()
+func InitializeConfig(e venv.Env) {
+	env = e
 	ConfigManager = readConfigValues()
 }
 
 func readConfigValues() Configurations {
 	return Configurations{
 		Database: Database{
-			Host:               env.Getenv("DB_HOST"),
-			Port:               env.Getenv("DB_PORT"),
-			Name:               env.Getenv("DB_NAME"),
-			Username:           env.Getenv("DB_USERNAME"),
-			Password:           env.Getenv("DB_PASSWORD"),
-			InsecureSkipVerify: env.Getenv("DB_INSECURE_SKIP_VERIFY") == "true",
+			Host:               getEnvVariable("DB_HOST", ""),
+			Port:               getEnvVariable("DB_PORT", ""),
+			Name:               getEnvVariable("DB_NAME", ""),
+			Username:           getEnvVariable("DB_USERNAME", ""),
+			Password:           getEnvVariable("DB_PASSWORD", ""),
+			InsecureSkipVerify: getEnvVariable("DB_INSECURE_SKIP_VERIFY", "false") == "true",
 		},
-		CORSAllowOrigins: env.Getenv("CORS_ALLOW_ORIGINS"),
-		Port:             env.Getenv("PORT"),
-		SecretToken:      env.Getenv("SECRET_TOKEN"),
-		JWT_PrivateKey:   env.Getenv("JWT_PRIVATE_KEY"),
+		Auth: Auth{
+			JWT_PrivateKey: getEnvVariable("JWT_PRIVATE_KEY", ""),
+			SecretToken:    getEnvVariable("SECRET_TOKEN", ""),
+		},
+		HttpsCert: HttpsCert{
+			CertFilePath: getEnvVariable("HTTPS_CERT_FILE_PATH", ""),
+			KeyFilePath:  getEnvVariable("HTTPS_KEY_FILE_PATH", ""),
+		},
+		CORSAllowOrigins:  getEnvVariable("CORS_ALLOW_ORIGINS", ""),
+		ServicePort:       getEnvVariable("PORT", "8080"),
+		ApiLimitPerSecond: getEnvVariable("API_LIMIT_PER_SECOND", ""),
 	}
+}
+
+func getEnvVariable(key string, defaultValue string) string {
+	value := env.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
 }

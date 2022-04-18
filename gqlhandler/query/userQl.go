@@ -32,12 +32,22 @@ var UsersQuery = &graphql.Field{
 		},
 	},
 	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+
+		if !common.IsValidUser(p) {
+			return nil, common.ErrUnauthorized
+		}
+
+		_, err := common.Sanitize(p.Args)
+		if err != nil {
+			return nil, err
+		}
+
 		userName := common.GetUserName(p)
 		logger.Log.Info("Query: Users called by " + userName)
 
 		//Get Users from db
 		var users []models.User
-		err := models.FindAll(models.UserCollection, p.Args, nil, &users, p.Context)
+		err = models.FindAll(models.UserCollection, p.Args, nil, &users, p.Context)
 		return users, err
 
 	},
