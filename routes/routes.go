@@ -61,7 +61,7 @@ func NewRouter() (router *mux.Router) {
 			handler = route.Middleware[i](handler)
 		}
 
-		r.Handler(route.Handler)
+		r.Handler(handler)
 
 	}
 	return

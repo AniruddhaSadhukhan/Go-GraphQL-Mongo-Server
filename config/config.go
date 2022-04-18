@@ -61,7 +61,7 @@ func readConfigValues() Configurations {
 		},
 		CORSAllowOrigins:  getEnvVariable("CORS_ALLOW_ORIGINS", ""),
 		ServicePort:       getEnvVariable("PORT", "8080"),
-		ApiLimitPerSecond: getEnvVariable("API_LIMIT_PER_SECOND", ""),
+		ApiLimitPerSecond: getEnvVariable("API_LIMIT_PER_SECOND", "500"),
 	}
 }
 
