@@ -1,11 +1,13 @@
 package mutation
 
 import (
+	"fmt"
 	"go-graphql-mongo-server/auth"
 	"go-graphql-mongo-server/common"
 	"go-graphql-mongo-server/gqlhandler/schema"
 	"go-graphql-mongo-server/logger"
 	"go-graphql-mongo-server/models"
+	"strings"
 
 	"github.com/graphql-go/graphql"
 	"github.com/mitchellh/mapstructure"
@@ -25,6 +27,16 @@ var CreateTokenMutation = &graphql.Field{
 		},
 	},
 	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+
+		if common.IsValidUser(p) {
+			return nil, common.ErrUnauthorized
+		}
+
+		_, err := common.Sanitize(p.Args)
+		if err != nil {
+			return nil, err
+		}
+
 		userName := common.GetUserName(p)
 		logger.Log.Info("Mutation: Create Token called by " + userName)
 
@@ -33,12 +45,15 @@ var CreateTokenMutation = &graphql.Field{
 		//Decode input to token
 		mapstructure.Decode(p.Args, &token)
 
-		err := auth.GenerateToken(&token)
+		err = auth.GenerateToken(&token)
 		if err != nil {
 			return nil, err
 		}
 
 		err = models.Insert(models.TokenCollection, token, p.Context)
+		if err != nil && strings.Contains(err.Error(), "duplicate key error") {
+			return nil, fmt.Errorf("a token with same name already exists")
+		}
 
 		return token, err
 
@@ -55,12 +70,22 @@ var RevokeTokenMutation = &graphql.Field{
 		},
 	},
 	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+
+		if common.IsValidUser(p) {
+			return false, common.ErrUnauthorized
+		}
+
+		_, err := common.Sanitize(p.Args)
+		if err != nil {
+			return nil, err
+		}
+
 		userName := common.GetUserName(p)
 		logger.Log.Info("Mutation: Revoke Token called by " + userName)
 
-		err := models.Delete(
+		err = models.Delete(
 			models.TokenCollection,
-			bson.M{"tokenName": p.Args["tokenName"].(string)},
+			bson.M{"tokenName": p.Args["tokenName"].(string), "userName": userName},
 			p.Context,
 		)
 		if err != nil {
