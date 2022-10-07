@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Route struct {
@@ -19,17 +20,20 @@ var routes []Route
 
 func initializeRoutes() {
 	createLimiterMiddleware()
-	setGraphQLRoutes()
+	setAllRoutes()
 }
 
-func register(method, pattern string, handler http.HandlerFunc, middleware []mux.MiddlewareFunc) {
+func registerApiRoute(method, pattern string, handler http.HandlerFunc, middleware []mux.MiddlewareFunc) {
 	pattern = "/api/v1" + pattern
+	registerCommonRoute(method, pattern, handler, middleware)
+}
+func registerCommonRoute(method, pattern string, handler http.HandlerFunc, middleware []mux.MiddlewareFunc) {
 	routes = append(routes, Route{method, pattern, handler, middleware}, Route{"OPTIONS", pattern, handler, middleware})
 }
 
-func setGraphQLRoutes() {
+func setAllRoutes() {
 
-	register(
+	registerApiRoute(
 		"POST",
 		"/graphql",
 		gqlhandler.GraphqlHandler,
@@ -38,10 +42,24 @@ func setGraphQLRoutes() {
 			auth.AuthMiddleware,
 		})
 
-	register(
+	registerApiRoute(
 		"GET",
 		"/graphiql",
 		gqlhandler.GraphiqlHandler,
+		nil,
+	)
+
+	registerCommonRoute(
+		"GET",
+		"/metrics",
+		promhttp.Handler().ServeHTTP,
+		nil,
+	)
+
+	registerCommonRoute(
+		"GET",
+		"/health",
+		healthCheckHandler,
 		nil,
 	)
 }
