@@ -49,7 +49,14 @@ func newDatabaseSession(db config.Database) *mongo.Client {
 		mongoURI = mongoURI + ":" + dbPort
 	}
 
-	clientOptions := options.Client().ApplyURI(mongoURI).SetAuth(credential)
+	logger.Log.Infof("Mongo host used is %s", mongoURI)
+
+	clientOptions := options.
+		Client().
+		ApplyURI(mongoURI).
+		SetAuth(credential).
+		SetRetryReads(true).
+		SetRetryWrites(true)
 
 	if db.InsecureSkipVerify {
 		clientOptions.TLSConfig = &tls.Config{InsecureSkipVerify: true}
@@ -61,6 +68,10 @@ func newDatabaseSession(db config.Database) *mongo.Client {
 	}
 
 	return session
+}
+
+func PingDatabase(ctx context.Context) error {
+	return GetDbSession().Ping(ctx, nil)
 }
 
 func getCollection(collectionName string) *mongo.Collection {
@@ -142,7 +153,7 @@ func Aggregate(collectionName string, pipeline []bson.M, resultSlicePointer inte
 
 }
 
-//Update with options
+// Update with options
 func UpdateWithOptions(collectionName string, filter interface{}, update interface{}, options *options.UpdateOptions, ctx context.Context) error {
 
 	res, err := getCollection(collectionName).UpdateOne(ctx, filter, update, options)
