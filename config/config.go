@@ -6,6 +6,7 @@ type Configurations struct {
 	Database
 	Auth
 	HttpsCert
+	ProductionMode    bool
 	CORSAllowOrigins  string
 	ServicePort       string
 	ApiLimitPerSecond string
@@ -35,7 +36,7 @@ type HttpsCert struct {
 var env venv.Env
 var ConfigManager Configurations
 
-//Set environment variables
+// Set environment variables
 func InitializeConfig(e venv.Env) {
 	env = e
 	ConfigManager = readConfigValues()
@@ -59,6 +60,7 @@ func readConfigValues() Configurations {
 			CertFilePath: getEnvVariable("HTTPS_CERT_FILE_PATH", ""),
 			KeyFilePath:  getEnvVariable("HTTPS_KEY_FILE_PATH", ""),
 		},
+		ProductionMode:    getEnvVariable("PRODUCTION_MODE", "true") == "true",
 		CORSAllowOrigins:  getEnvVariable("CORS_ALLOW_ORIGINS", ""),
 		ServicePort:       getEnvVariable("PORT", "8080"),
 		ApiLimitPerSecond: getEnvVariable("API_LIMIT_PER_SECOND", "500"),

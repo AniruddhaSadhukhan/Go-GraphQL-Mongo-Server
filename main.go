@@ -25,13 +25,16 @@ func main() {
 	// Initialize config
 	config.InitializeConfig(venv.OS())
 
+	// Initialize Logger
+	logger.Initialize()
+
 	// Initialize Database
 	models.InitializeDB()
 
 	//Run DB Migration
 	err := dbmigration.RunDbSchemaMigration("")
 	if err != nil {
-		panic(fmt.Sprintf("Error while running migration : %v", err))
+		panic(fmt.Errorf("error while running migration : %v", err))
 	}
 
 	// Configure Server
