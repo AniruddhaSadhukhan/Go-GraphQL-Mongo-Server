@@ -1,36 +1,109 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>GraphiQL</title>
-    <link href="https://unpkg.com/graphiql/graphiql.min.css" rel="stylesheet" />
-  </head>
-  <body style="margin: 0">
-    <div id="graphiql" style="height: 100vh"></div>
+    <title>Go GraphQL Mongo GraphiQL</title>
+    <style>
+      body {
+        height: 100%;
+        margin: 0;
+        width: 100%;
+        overflow: hidden;
+      }
+
+      #graphiql {
+        height: 100vh;
+      }
+
+      .graphiql-container {
+        --font-size-body: 0.9rem !important;
+        --font-size-h4: 1.1rem !important;
+        --font-size-h3: 1.3rem !important;
+        --font-size-h2: 1.5rem !important;
+      }
+
+      .graphiql-explorer-root > div:first-child {
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+      }
+
+      .graphiql-explorer-graphql-arguments {
+        font-style: italic;
+      }
+    </style>
 
     <script
       crossorigin
-      src="https://unpkg.com/react/umd/react.production.min.js"
+      src="https://unpkg.com/react@17/umd/react.production.min.js"
     ></script>
     <script
       crossorigin
-      src="https://unpkg.com/react-dom/umd/react-dom.production.min.js"
+      src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"
     ></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/graphiql/graphiql.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@graphiql/plugin-explorer/dist/style.css"
+    />
+  </head>
+
+  <body>
+    <div id="graphiql">Loading...</div>
+
     <script
-      crossorigin
       src="https://unpkg.com/graphiql/graphiql.min.js"
+      type="application/javascript"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/@graphiql/plugin-explorer/dist/graphiql-plugin-explorer.umd.js"
     ></script>
 
     <script>
-      const fetcher = GraphiQL.createFetcher({ url: "/api/v1/graphql" });
+      var fetcher = GraphiQL.createFetcher({
+        url: "/api/v1/graphql",
+      });
+
+      function GraphiQLWithExplorer() {
+        var [query, setQuery] = React.useState(
+          localStorage.getItem("graphiql:query")
+        );
+        var explorerPlugin = GraphiQLPluginExplorer.useExplorerPlugin({
+          query: query,
+          onEdit: setQuery,
+          colors: {
+            keyword: "hsl(var(--color-primary))",
+            def: "hsl(var(--color-tertiary))",
+            property: "hsl(var(--color-info))",
+            qualifier: "hsl(var(--color-secondary))",
+            attribute: "hsl(var(--color-secondary))",
+            number: "hsl(var(--color-success))",
+            string: "hsl(var(--color-warning))",
+            builtin: "hsl(var(--color-success))",
+            string2: "hsl(var(--color-secondary))",
+            variable: "hsl(var(--color-secondary))",
+            atom: "hsl(var(--color-tertiary))",
+          },
+        });
+        return React.createElement(GraphiQL, {
+          fetcher: fetcher,
+          defaultEditorToolsVisibility: "variables",
+          shouldPersistHeaders: true,
+          plugins: [explorerPlugin],
+          query: query,
+          onEditQuery: setQuery,
+        });
+      }
 
       ReactDOM.render(
-        React.createElement(GraphiQL, {
-          fetcher: fetcher,
-          docExplorerOpen: true,
-          shouldPersistHeaders: true,
-        }),
+        React.createElement(GraphiQLWithExplorer),
         document.getElementById("graphiql")
       );
+    </script>
+
+    <script>
+      document.querySelector(".graphiql-logo").innerHTML =
+        "Go GraphQL Mongo Graph<em>i</em>QL";
     </script>
   </body>
 </html>
