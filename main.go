@@ -14,6 +14,7 @@ import (
 
 	"github.com/adammck/venv"
 	"github.com/gorilla/handlers"
+	"github.com/urfave/negroni"
 )
 
 type Service struct {
@@ -41,7 +42,7 @@ func main() {
 	service := &Service{}
 	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"})
-	// Get CORS Allowe Origins from config
+	// Get CORS Allowed Origins from config
 	str := config.ConfigManager.CORSAllowOrigins
 	CORSAllowOrigins := []string{}
 	if str != "" {
@@ -51,9 +52,13 @@ func main() {
 	logger.Log.Info("CORS Allow Origins: ", CORSAllowOrigins)
 
 	router := routes.NewRouter()
+	n:= negroni.New(negroni.NewRecovery(), negroni.NewLogger())
+	n.UseHandler(router)
 	service.HTTPServer = http.Server{
 		Addr:    ":" + config.ConfigManager.ServicePort,
-		Handler: handlers.CORS(origins, headers, methods)(router),
+		Handler: handlers.CORS(origins, headers, methods)(n),
+		// Uncomment the next line to disable HTTP 2
+		// TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)), 
 	}
 
 	err = service.Run()
