@@ -14,6 +14,7 @@ import (
 
 	"github.com/adammck/venv"
 	"github.com/gorilla/handlers"
+	"github.com/robfig/cron/v3"
 	"github.com/urfave/negroni"
 )
 
@@ -52,13 +53,13 @@ func main() {
 	logger.Log.Info("CORS Allow Origins: ", CORSAllowOrigins)
 
 	router := routes.NewRouter()
-	n:= negroni.New(negroni.NewRecovery(), negroni.NewLogger())
+	n := negroni.New(negroni.NewRecovery(), negroni.NewLogger())
 	n.UseHandler(router)
 	service.HTTPServer = http.Server{
 		Addr:    ":" + config.ConfigManager.ServicePort,
 		Handler: handlers.CORS(origins, headers, methods)(n),
 		// Uncomment the next line to disable HTTP 2
-		// TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)), 
+		// TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
 
 	err = service.Run()
@@ -104,4 +105,11 @@ func (s *Service) Shutdown() error {
 		return err
 	}
 	return nil
+}
+
+// Set up all cron jobs
+func setUpCronJobs() {
+	cronJob := cron.New()
+	cronJob.AddFunc("@every 5m", routes.CheckDbConnection)
+	cronJob.Start()
 }
