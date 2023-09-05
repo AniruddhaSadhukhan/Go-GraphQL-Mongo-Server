@@ -9,7 +9,11 @@ type Configurations struct {
 	ProductionMode    bool
 	CORSAllowOrigins  string
 	ServicePort       string
-	ApiLimitPerSecond string
+	APILimitPerSecond string
+	TelemetryURL      string
+	PlatformName      string
+	Env               string
+	ComponentName     string
 }
 
 // Database configuration
@@ -74,7 +78,11 @@ func readConfigValues() Configurations {
 		ProductionMode:    getEnvVariable("PRODUCTION_MODE", "true") == "true",
 		CORSAllowOrigins:  getEnvVariable("CORS_ALLOW_ORIGINS", ""),
 		ServicePort:       getEnvVariable("PORT", "8080"),
-		ApiLimitPerSecond: getEnvVariable("API_LIMIT_PER_SECOND", "500"),
+		APILimitPerSecond: getEnvVariable("API_LIMIT_PER_SECOND", "500"),
+		TelemetryURL:      getEnvVariable("TELEMETRY_URL", ""),
+		PlatformName:      getEnvVariable("PLATFORM_NAME", "Ani Platform"),
+		Env:               getEnvVariable("ENV", ""),
+		ComponentName:     getEnvVariable("COMPONENT_NAME", "Go GraphQl Mongo Server"),
 	}
 }
 

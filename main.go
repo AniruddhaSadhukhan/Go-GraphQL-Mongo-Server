@@ -78,16 +78,17 @@ func main() {
 func (s *Service) Run() error {
 	logger.Log.Info("Starting the server on port ", config.Store.ServicePort)
 
-	if checkIfHttpsCertExists() {
+	if checkIfHTTPSCertExists() {
 		logger.Log.Info("HTTPS Enabled")
 		return s.HTTPServer.ListenAndServeTLS(config.Store.HTTPSCert.CertFilePath, config.Store.HTTPSCert.KeyFilePath)
-	} else {
-		logger.Log.Info("HTTPS Disabled")
-		return s.HTTPServer.ListenAndServe()
 	}
+	
+	logger.Log.Info("HTTPS Disabled")
+	return s.HTTPServer.ListenAndServe()
+
 }
 
-func checkIfHttpsCertExists() bool {
+func checkIfHTTPSCertExists() bool {
 	if config.Store.HTTPSCert.CertFilePath == "" || config.Store.HTTPSCert.KeyFilePath == "" {
 		return false
 	}

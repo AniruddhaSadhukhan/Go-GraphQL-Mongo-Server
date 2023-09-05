@@ -2,6 +2,14 @@
 <html lang="en">
   <head>
     <title>Go GraphQL Mongo GraphiQL</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/graphiql@3.0/graphiql.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@graphiql/plugin-explorer@0.3/dist/style.css"
+    />
     <style>
       body {
         height: 100%;
@@ -32,76 +40,41 @@
     </style>
 
     <script
-      crossorigin
-      src="https://unpkg.com/react@17/umd/react.production.min.js"
+      src="https://unpkg.com/react@18/umd/react.production.min.js"
+      type="application/javascript"
     ></script>
     <script
-      crossorigin
-      src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+      type="application/javascript"
     ></script>
-
-    <link rel="stylesheet" href="https://unpkg.com/graphiql/graphiql.min.css" />
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/@graphiql/plugin-explorer/dist/style.css"
-    />
+    <script
+      src="https://unpkg.com/graphiql@3.0/graphiql.min.js"
+      type="application/javascript"
+    ></script>
+    <script
+      src="https://unpkg.com/@graphiql/plugin-explorer@0.3/dist/index.umd.js"
+      type="application/javascript"
+    ></script>
   </head>
 
   <body>
     <div id="graphiql">Loading...</div>
 
-    <script
-      src="https://unpkg.com/graphiql/graphiql.min.js"
-      type="application/javascript"
-    ></script>
-    <script
-      crossorigin
-      src="https://unpkg.com/@graphiql/plugin-explorer/dist/graphiql-plugin-explorer.umd.js"
-    ></script>
-
     <script>
-      var fetcher = GraphiQL.createFetcher({
-        url: "/api/v1/graphql",
-      });
-
-      function GraphiQLWithExplorer() {
-        var [query, setQuery] = React.useState(
-          localStorage.getItem("graphiql:query")
-        );
-        var explorerPlugin = GraphiQLPluginExplorer.useExplorerPlugin({
-          query: query,
-          onEdit: setQuery,
-          colors: {
-            keyword: "hsl(var(--color-primary))",
-            def: "hsl(var(--color-tertiary))",
-            property: "hsl(var(--color-info))",
-            qualifier: "hsl(var(--color-secondary))",
-            attribute: "hsl(var(--color-secondary))",
-            number: "hsl(var(--color-success))",
-            string: "hsl(var(--color-warning))",
-            builtin: "hsl(var(--color-success))",
-            string2: "hsl(var(--color-secondary))",
-            variable: "hsl(var(--color-secondary))",
-            atom: "hsl(var(--color-tertiary))",
-          },
-        });
-        return React.createElement(GraphiQL, {
-          fetcher: fetcher,
+      ReactDOM.render(
+        React.createElement(GraphiQL, {
+          fetcher: GraphiQL.createFetcher({ url: "/api/v1/graphql" }),
+          storage: GraphiQL.createLocalStorage({
+            namespace: "GoGraphQLMongoServer",
+          }),
           defaultEditorToolsVisibility: "variables",
           shouldPersistHeaders: true,
-          plugins: [explorerPlugin],
-          query: query,
-          onEditQuery: setQuery,
-        });
-      }
-
-      ReactDOM.render(
-        React.createElement(GraphiQLWithExplorer),
+          plugins: [GraphiQLPluginExplorer.explorerPlugin()],
+          defaultHeaders: '{\n "Authorization": "Add your token here"\n}',
+        }),
         document.getElementById("graphiql")
       );
-    </script>
 
-    <script>
       document.querySelector(".graphiql-logo").innerHTML =
         "Go GraphQL Mongo Graph<em>i</em>QL";
     </script>

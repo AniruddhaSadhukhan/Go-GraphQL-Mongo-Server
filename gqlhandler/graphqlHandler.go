@@ -8,7 +8,7 @@ import (
 	"go-graphql-mongo-server/gqlhandler/query"
 	"go-graphql-mongo-server/logger"
 	"go-graphql-mongo-server/models"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/graphql-go/graphql"
@@ -41,7 +41,7 @@ var rootQuery = graphql.NewObject(graphql.ObjectConfig{
 func GraphqlHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	ctx := r.Context()
-	queryBody, err := ioutil.ReadAll(r.Body)
+	queryBody, err := io.ReadAll(r.Body)
 	if err != nil {
 		handleError("Error in reading request body", err, w)
 		return

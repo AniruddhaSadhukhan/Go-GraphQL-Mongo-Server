@@ -5,6 +5,7 @@ import (
 	"go-graphql-mongo-server/gqlhandler/schema"
 	"go-graphql-mongo-server/logger"
 	"go-graphql-mongo-server/models"
+	"go-graphql-mongo-server/telemetry"
 
 	"github.com/graphql-go/graphql"
 	"github.com/mitchellh/mapstructure"
@@ -19,7 +20,7 @@ var UserMutation = &graphql.Field{
 			Type: graphql.NewNonNull(graphql.NewList(schema.UserInputSchema)),
 		},
 	},
-	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+	Resolve: func(p graphql.ResolveParams) (i interface{}, e error) {
 
 		if !common.IsInternalUser(p) {
 			return nil, common.ErrUnauthorized
@@ -30,13 +31,18 @@ var UserMutation = &graphql.Field{
 			return nil, err
 		}
 
+		defer telemetry.LogGraphQlCall(p, e)
+
 		userName := common.GetUserName(p)
 		logger.Log.Info("Mutation: User called by " + userName)
 
 		var userInput []models.User
 
 		//Decode input to UserInput
-		mapstructure.Decode(p.Args["input"], &userInput)
+		err = mapstructure.Decode(p.Args["input"], &userInput)
+		if err != nil {
+			logger.Log.Error(err)
+		}
 
 		// Create []interface{} from userInput
 		var userInputInterface []interface{}
@@ -45,7 +51,7 @@ var UserMutation = &graphql.Field{
 		}
 
 		//Insert user
-		err = models.InsertMany(models.UserCollection, userInputInterface, p.Context)
+		err = models.InsertMany(p.Context, models.UserCollection, userInputInterface)
 		return userInput, err
 
 	},

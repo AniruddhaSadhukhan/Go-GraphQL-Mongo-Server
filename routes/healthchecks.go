@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var isDbConnOk bool = true
+var isDbConnOk = true
 
 func CheckDbConnection() {
 	err := models.PingDatabase(context.TODO())
@@ -23,7 +23,7 @@ func CheckDbConnection() {
 	}
 }
 
-func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+func healthCheckHandler(w http.ResponseWriter, _ *http.Request) {
 	if !isDbConnOk {
 		w.WriteHeader(http.StatusServiceUnavailable)
 	}

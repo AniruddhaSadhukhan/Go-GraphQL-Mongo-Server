@@ -7,6 +7,7 @@ import (
 	"go-graphql-mongo-server/gqlhandler/schema"
 	"go-graphql-mongo-server/logger"
 	"go-graphql-mongo-server/models"
+	"go-graphql-mongo-server/telemetry"
 	"strings"
 
 	"github.com/graphql-go/graphql"
@@ -25,8 +26,12 @@ var CreateTokenMutation = &graphql.Field{
 		"expiresAt": &graphql.ArgumentConfig{
 			Type: graphql.NewNonNull(graphql.DateTime),
 		},
+		"userName": &graphql.ArgumentConfig{
+			Type:        graphql.String,
+			Description: "This username will only be used when Admin runs this mutation. Otherwise this will be ignored.",
+		},
 	},
-	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+	Resolve: func(p graphql.ResolveParams) (i interface{}, e error) {
 
 		if common.IsValidUser(p) {
 			return nil, common.ErrUnauthorized
@@ -37,20 +42,24 @@ var CreateTokenMutation = &graphql.Field{
 			return nil, err
 		}
 
-		userName := common.GetUserName(p)
-		logger.Log.Info("Mutation: Create Token called by " + userName)
+		defer telemetry.LogGraphQlCall(p, e)
+
+		userName := common.GetTokenUserName(p)
 
 		var token models.Token
-		token.UserName = userName
 		//Decode input to token
-		mapstructure.Decode(p.Args, &token)
+		err = mapstructure.Decode(p.Args, &token)
+		if err != nil {
+			logger.Log.Error(err)
+		}
+		token.UserName = userName
 
 		err = auth.GenerateToken(&token)
 		if err != nil {
 			return nil, err
 		}
 
-		err = models.Insert(models.TokenCollection, token, p.Context)
+		err = models.Insert(p.Context, models.TokenCollection, token)
 		if err != nil && strings.Contains(err.Error(), "duplicate key error") {
 			return nil, fmt.Errorf("a token with same name already exists")
 		}
@@ -68,8 +77,12 @@ var RevokeTokenMutation = &graphql.Field{
 		"tokenName": &graphql.ArgumentConfig{
 			Type: graphql.NewNonNull(graphql.String),
 		},
+		"userName": &graphql.ArgumentConfig{
+			Type:        graphql.String,
+			Description: "This username will only be used when Admin runs this mutation. Otherwise this will be ignored.",
+		},
 	},
-	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+	Resolve: func(p graphql.ResolveParams) (i interface{}, e error) {
 
 		if common.IsValidUser(p) {
 			return false, common.ErrUnauthorized
@@ -80,13 +93,14 @@ var RevokeTokenMutation = &graphql.Field{
 			return nil, err
 		}
 
+		defer telemetry.LogGraphQlCall(p, e)
+
 		userName := common.GetUserName(p)
-		logger.Log.Info("Mutation: Revoke Token called by " + userName)
 
 		err = models.Delete(
-			models.TokenCollection,
-			bson.M{"tokenName": p.Args["tokenName"].(string), "userName": userName}, 
 			p.Context,
+			models.TokenCollection,
+			bson.M{"tokenName": p.Args["tokenName"].(string), "userName": userName},
 		)
 		if err != nil {
 			return false, err

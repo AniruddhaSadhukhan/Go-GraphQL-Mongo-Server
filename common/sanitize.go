@@ -9,14 +9,14 @@ import (
 )
 
 const (
-	MAX_PERMISSIBLE_INPUT_STRING_LENGTH = 10000
-	MAX_PERMISSIBLE_INPUT_NUMBER        = 5000000
+	maxPermissibleInputStringLength = 10000
+	maxPermissibleInputNumber       = 5000000
 )
 
 var initializeHTMLSanitizer sync.Once
 var htmlSanitizer *bluemonday.Policy
 
-func getHtmlSanitizer() *bluemonday.Policy {
+func getHTMLSanitizer() *bluemonday.Policy {
 	initializeHTMLSanitizer.Do(func() {
 		if htmlSanitizer == nil {
 			htmlSanitizer = bluemonday.UGCPolicy()
@@ -54,19 +54,19 @@ func Sanitize(rawInput interface{}) (interface{}, error) {
 	//Check for string length and sanitize the string using Bluemonday
 	case reflect.String:
 		rawInputString := rawInput.(string)
-		if len(rawInputString) > MAX_PERMISSIBLE_INPUT_STRING_LENGTH {
+		if len(rawInputString) > maxPermissibleInputStringLength {
 			return rawInput, fmt.Errorf("string length exceeded")
 		}
-		rawInput = getHtmlSanitizer().Sanitize(rawInputString)
+		rawInput = getHTMLSanitizer().Sanitize(rawInputString)
 
 	// For int and float, if number exceeds 5 million, return error
 	case reflect.Int:
-		if rawInput.(int) > MAX_PERMISSIBLE_INPUT_NUMBER {
+		if rawInput.(int) > maxPermissibleInputNumber {
 			return rawInput, fmt.Errorf("number exceeded")
 		}
 
 	case reflect.Float64:
-		if rawInput.(float64) > MAX_PERMISSIBLE_INPUT_NUMBER {
+		if rawInput.(float64) > maxPermissibleInputNumber {
 			return rawInput, fmt.Errorf("floating point number exceeded")
 		}
 

@@ -58,6 +58,7 @@ func newDatabaseSession(db config.Database) *mongo.Client {
 		SetRetryReads(true).
 		SetRetryWrites(true)
 
+	//nolint:gosec
 	if db.InsecureSkipVerify {
 		clientOptions.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	}
@@ -78,7 +79,7 @@ func getCollection(collectionName string) *mongo.Collection {
 	return GetDbSession().Database(dbName).Collection(collectionName)
 }
 
-func Insert(collectionName string, document interface{}, ctx context.Context) error {
+func Insert(ctx context.Context, collectionName string, document interface{}) error {
 
 	_, err := getCollection(collectionName).InsertOne(ctx, document)
 	if err != nil {
@@ -88,7 +89,7 @@ func Insert(collectionName string, document interface{}, ctx context.Context) er
 
 }
 
-func InsertMany(collectionName string, documents []interface{}, ctx context.Context) error {
+func InsertMany(ctx context.Context, collectionName string, documents []interface{}) error {
 
 	_, err := getCollection(collectionName).InsertMany(ctx, documents)
 	if err != nil {
@@ -98,7 +99,15 @@ func InsertMany(collectionName string, documents []interface{}, ctx context.Cont
 
 }
 
-func IsExist(collectionName string, filter interface{}, ctx context.Context) bool {
+func BulkWrite(ctx context.Context, collectionName string, models []mongo.WriteModel, opts ...*options.BulkWriteOptions) error {
+	_, err := getCollection(collectionName).BulkWrite(ctx, models, opts...)
+	if err != nil {
+		logger.Log.Error("Error bulk writing documents: " + err.Error())
+	}
+	return err
+}
+
+func IsExist(ctx context.Context, collectionName string, filter interface{}) bool {
 
 	count, err := getCollection(collectionName).CountDocuments(ctx, filter)
 	if err != nil {
@@ -109,7 +118,7 @@ func IsExist(collectionName string, filter interface{}, ctx context.Context) boo
 }
 
 // Generic Find One Document from MongoDB
-func FindOne(collectionName string, filter interface{}, projection interface{}, resultPointer interface{}, ctx context.Context) error {
+func FindOne(ctx context.Context, collectionName string, filter interface{}, projection interface{}, resultPointer interface{}) error {
 
 	err := getCollection(collectionName).FindOne(ctx, filter, options.FindOne().SetProjection(projection)).Decode(resultPointer)
 	if err != nil {
@@ -120,7 +129,7 @@ func FindOne(collectionName string, filter interface{}, projection interface{}, 
 }
 
 // Generic Find All Documents from MongoDB
-func FindAll(collectionName string, filter interface{}, projection interface{}, resultSlicePointer interface{}, ctx context.Context) error {
+func FindAll(ctx context.Context, collectionName string, filter interface{}, projection interface{}, resultSlicePointer interface{}) error {
 
 	cursor, err := getCollection(collectionName).Find(ctx, filter, options.Find().SetProjection(projection))
 	if err != nil {
@@ -137,7 +146,7 @@ func FindAll(collectionName string, filter interface{}, projection interface{}, 
 }
 
 // Generic Aggregate Documents from MongoDB
-func Aggregate(collectionName string, pipeline []bson.M, resultSlicePointer interface{}, ctx context.Context) error {
+func Aggregate(ctx context.Context, collectionName string, pipeline []bson.M, resultSlicePointer interface{}) error {
 
 	cursor, err := getCollection(collectionName).Aggregate(ctx, pipeline)
 	if err != nil {
@@ -154,7 +163,7 @@ func Aggregate(collectionName string, pipeline []bson.M, resultSlicePointer inte
 }
 
 // Update with options
-func UpdateWithOptions(collectionName string, filter interface{}, update interface{}, options *options.UpdateOptions, ctx context.Context) error {
+func UpdateWithOptions(ctx context.Context, collectionName string, filter interface{}, update interface{}, options *options.UpdateOptions) error {
 
 	res, err := getCollection(collectionName).UpdateOne(ctx, filter, update, options)
 	if err != nil {
@@ -170,19 +179,19 @@ func UpdateWithOptions(collectionName string, filter interface{}, update interfa
 
 }
 
-func Update(collectionName string, filter interface{}, update interface{}, ctx context.Context) error {
+func Update(ctx context.Context, collectionName string, filter interface{}, update interface{}) error {
 
-	return UpdateWithOptions(collectionName, filter, update, nil, ctx)
-
-}
-
-func Upsert(collectionName string, filter interface{}, update interface{}, ctx context.Context) error {
-
-	return UpdateWithOptions(collectionName, filter, update, options.Update().SetUpsert(true), ctx)
+	return UpdateWithOptions(ctx, collectionName, filter, update, nil)
 
 }
 
-func UpdateMany(collectionName string, filter interface{}, update interface{}, ctx context.Context) error {
+func Upsert(ctx context.Context, collectionName string, filter interface{}, update interface{}) error {
+
+	return UpdateWithOptions(ctx, collectionName, filter, update, options.Update().SetUpsert(true))
+
+}
+
+func UpdateMany(ctx context.Context, collectionName string, filter interface{}, update interface{}) error {
 
 	_, err := getCollection(collectionName).UpdateMany(ctx, filter, update)
 	if err != nil {
@@ -192,7 +201,7 @@ func UpdateMany(collectionName string, filter interface{}, update interface{}, c
 
 }
 
-func Delete(collectionName string, filter interface{}, ctx context.Context) error {
+func Delete(ctx context.Context, collectionName string, filter interface{}) error {
 
 	_, err := getCollection(collectionName).DeleteOne(ctx, filter)
 	if err != nil {
@@ -202,7 +211,7 @@ func Delete(collectionName string, filter interface{}, ctx context.Context) erro
 
 }
 
-func DeleteMany(collectionName string, filter interface{}, ctx context.Context) error {
+func DeleteMany(ctx context.Context, collectionName string, filter interface{}) error {
 
 	_, err := getCollection(collectionName).DeleteMany(ctx, filter)
 	if err != nil {
@@ -212,7 +221,7 @@ func DeleteMany(collectionName string, filter interface{}, ctx context.Context) 
 
 }
 
-func FindDistinct(collectionName string, fieldName string, filter interface{}, ctx context.Context) ([]string, error) {
+func FindDistinct(ctx context.Context, collectionName string, fieldName string, filter interface{}) ([]string, error) {
 
 	if filter == nil {
 		filter = bson.M{}

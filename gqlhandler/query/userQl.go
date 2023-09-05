@@ -5,6 +5,7 @@ import (
 	"go-graphql-mongo-server/gqlhandler/schema"
 	"go-graphql-mongo-server/logger"
 	"go-graphql-mongo-server/models"
+	"go-graphql-mongo-server/telemetry"
 
 	"github.com/graphql-go/graphql"
 )
@@ -31,7 +32,7 @@ var UsersQuery = &graphql.Field{
 			Type: schema.SubscriptionTypeEnum,
 		},
 	},
-	Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+	Resolve: func(p graphql.ResolveParams) (i interface{}, e error) {
 
 		if !common.IsValidUser(p) {
 			return nil, common.ErrUnauthorized
@@ -42,12 +43,14 @@ var UsersQuery = &graphql.Field{
 			return nil, err
 		}
 
+		defer telemetry.LogGraphQlCall(p, e)
+
 		userName := common.GetUserName(p)
 		logger.Log.Info("Query: Users called by " + userName)
 
 		//Get Users from db
 		var users []models.User
-		err = models.FindAll(models.UserCollection, p.Args, nil, &users, p.Context)
+		err = models.FindAll(p.Context, models.UserCollection, p.Args, nil, &users)
 		return users, err
 
 	},

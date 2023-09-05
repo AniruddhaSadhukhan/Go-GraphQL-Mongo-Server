@@ -13,7 +13,7 @@ import (
 var limiterMiddleware *httplimit.Middleware
 
 func createLimiterMiddleware() {
-	apiLimitPerSecond, err := strconv.ParseUint(config.Store.ApiLimitPerSecond, 10, 64)
+	apiLimitPerSecond, err := strconv.ParseUint(config.Store.APILimitPerSecond, 10, 64)
 	if err != nil || apiLimitPerSecond == 0 {
 		logger.Log.Error("Error parsing apiLimitPerSecond: " + err.Error())
 		return

@@ -23,7 +23,7 @@ func initializeRoutes() {
 	setAllRoutes()
 }
 
-func registerApiRoute(method, pattern string, handler http.HandlerFunc, middleware []mux.MiddlewareFunc) {
+func registerAPIRoute(method, pattern string, handler http.HandlerFunc, middleware []mux.MiddlewareFunc) {
 	pattern = "/api" + pattern
 	registerCommonRoute(method, pattern, handler, middleware)
 }
@@ -33,7 +33,7 @@ func registerCommonRoute(method, pattern string, handler http.HandlerFunc, middl
 
 func setAllRoutes() {
 
-	registerApiRoute(
+	registerAPIRoute(
 		"POST",
 		"/graphql",
 		gqlhandler.GraphqlHandler,
@@ -42,7 +42,7 @@ func setAllRoutes() {
 			auth.Middleware,
 		})
 
-	registerApiRoute(
+	registerAPIRoute(
 		"GET",
 		"/graphiql",
 		gqlhandler.GraphiqlHandler,

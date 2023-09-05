@@ -16,7 +16,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -81,12 +81,12 @@ func validateJwtInHouse(ctx context.Context, token *jwt.Token, tokenString strin
 	if ok && claims["sub"] != nil {
 		userName := claims["sub"].(string)
 		if models.IsExist(
+			ctx,
 			models.TokenCollection,
 			bson.M{
 				"userName":  userName,
 				"tokenHash": tokenHash,
 			},
-			ctx,
 		) {
 			return pubKey, nil
 		}
