@@ -30,7 +30,7 @@ func Initialize() {
 
 	var loggerCore zapcore.Core
 
-	if config.ConfigManager.ProductionMode {
+	if config.Store.ProductionMode {
 
 		// For production, output logs in JSON Format
 		loggerCore = zapcore.NewCore(

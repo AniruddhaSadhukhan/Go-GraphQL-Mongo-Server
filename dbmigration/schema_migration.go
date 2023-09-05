@@ -16,7 +16,7 @@ import (
 // Eg: "." or "./" or "", "./.." or "./../" or "../" or "..", "./../.." etc.
 func RunDbSchemaMigration(relativePathPrefixToMainDir string) error {
 
-	dbName := config.ConfigManager.Database.Name
+	dbName := config.Store.Database.Name
 	mongoDriver, err := mongodb.WithInstance(models.GetDbSession(), &mongodb.Config{
 		DatabaseName:         dbName,
 		MigrationsCollection: models.SchemaMigrationCollection,

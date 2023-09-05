@@ -27,7 +27,7 @@ func InitializeDB() {
 func GetDbSession() *mongo.Client {
 	once.Do(func() {
 		if dbSession == nil {
-			dbSession = newDatabaseSession(config.ConfigManager.Database)
+			dbSession = newDatabaseSession(config.Store.Database)
 		}
 	})
 	return dbSession

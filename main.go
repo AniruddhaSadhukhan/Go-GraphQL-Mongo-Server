@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/adammck/venv"
 	"github.com/gorilla/handlers"
@@ -39,12 +40,15 @@ func main() {
 		panic(fmt.Errorf("error while running migration : %v", err))
 	}
 
+	// Initialize Cron
+	setUpCronJobs()
+
 	// Configure Server
 	service := &Service{}
 	headers := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	methods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"})
 	// Get CORS Allowed Origins from config
-	str := config.ConfigManager.CORSAllowOrigins
+	str := config.Store.CORSAllowOrigins
 	CORSAllowOrigins := []string{}
 	if str != "" {
 		CORSAllowOrigins = strings.Split(str, ",")
@@ -55,9 +59,11 @@ func main() {
 	router := routes.NewRouter()
 	n := negroni.New(negroni.NewRecovery(), negroni.NewLogger())
 	n.UseHandler(router)
+
 	service.HTTPServer = http.Server{
-		Addr:    ":" + config.ConfigManager.ServicePort,
-		Handler: handlers.CORS(origins, headers, methods)(n),
+		Addr:              ":" + config.Store.ServicePort,
+		Handler:           handlers.CORS(origins, headers, methods)(n),
+		ReadHeaderTimeout: 10 * time.Second,
 		// Uncomment the next line to disable HTTP 2
 		// TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
@@ -70,11 +76,11 @@ func main() {
 }
 
 func (s *Service) Run() error {
-	logger.Log.Info("Starting the server on port ", config.ConfigManager.ServicePort)
+	logger.Log.Info("Starting the server on port ", config.Store.ServicePort)
 
 	if checkIfHttpsCertExists() {
 		logger.Log.Info("HTTPS Enabled")
-		return s.HTTPServer.ListenAndServeTLS(config.ConfigManager.HttpsCert.CertFilePath, config.ConfigManager.HttpsCert.KeyFilePath)
+		return s.HTTPServer.ListenAndServeTLS(config.Store.HTTPSCert.CertFilePath, config.Store.HTTPSCert.KeyFilePath)
 	} else {
 		logger.Log.Info("HTTPS Disabled")
 		return s.HTTPServer.ListenAndServe()
@@ -82,21 +88,21 @@ func (s *Service) Run() error {
 }
 
 func checkIfHttpsCertExists() bool {
-	if config.ConfigManager.HttpsCert.CertFilePath == "" || config.ConfigManager.HttpsCert.KeyFilePath == "" {
+	if config.Store.HTTPSCert.CertFilePath == "" || config.Store.HTTPSCert.KeyFilePath == "" {
 		return false
 	}
 
-	if _, err := os.Stat(config.ConfigManager.HttpsCert.CertFilePath); os.IsNotExist(err) {
-		logger.Log.Error("HTTPS Cert File does not exist: ", config.ConfigManager.HttpsCert.CertFilePath)
+	if _, err := os.Stat(config.Store.HTTPSCert.CertFilePath); os.IsNotExist(err) {
+		logger.Log.Error("HTTPS Cert File does not exist: ", config.Store.HTTPSCert.CertFilePath)
 		return false
 	}
 
-	if _, err := os.Stat(config.ConfigManager.HttpsCert.KeyFilePath); os.IsNotExist(err) {
-		logger.Log.Error("HTTPS Key File does not exist: ", config.ConfigManager.HttpsCert.KeyFilePath)
+	if _, err := os.Stat(config.Store.HTTPSCert.KeyFilePath); os.IsNotExist(err) {
+		logger.Log.Error("HTTPS Key File does not exist: ", config.Store.HTTPSCert.KeyFilePath)
 		return false
 	}
 
-	config.ConfigManager.HttpsCert.HttpsEnabled = true
+	config.Store.HTTPSCert.HTTPSEnabled = true
 	return true
 }
 
@@ -110,6 +116,9 @@ func (s *Service) Shutdown() error {
 // Set up all cron jobs
 func setUpCronJobs() {
 	cronJob := cron.New()
-	cronJob.AddFunc("@every 5m", routes.CheckDbConnection)
+	_, err := cronJob.AddFunc("@every 5m", routes.CheckDbConnection)
+	if err != nil {
+		logger.Log.Error(err)
+	}
 	cronJob.Start()
 }

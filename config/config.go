@@ -5,7 +5,7 @@ import "github.com/adammck/venv"
 type Configurations struct {
 	Database
 	Auth
-	HttpsCert
+	HTTPSCert
 	ProductionMode    bool
 	CORSAllowOrigins  string
 	ServicePort       string
@@ -23,23 +23,31 @@ type Database struct {
 }
 
 type Auth struct {
-	JWT_PrivateKey string
-	SecretToken    string
+	// In House Token related configs
+	JWTInHousePrivateKey string
+
+	// Internal auth config
+	SecretToken string
+
+	// OIDC related configs
+	OidcURL      string
+	ClientID     string
+	ClientSecret string
 }
 
-type HttpsCert struct {
-	HttpsEnabled bool
+type HTTPSCert struct {
+	HTTPSEnabled bool
 	CertFilePath string
 	KeyFilePath  string
 }
 
 var env venv.Env
-var ConfigManager Configurations
+var Store Configurations
 
 // Set environment variables
 func InitializeConfig(e venv.Env) {
 	env = e
-	ConfigManager = readConfigValues()
+	Store = readConfigValues()
 }
 
 func readConfigValues() Configurations {
@@ -53,10 +61,13 @@ func readConfigValues() Configurations {
 			InsecureSkipVerify: getEnvVariable("DB_INSECURE_SKIP_VERIFY", "false") == "true",
 		},
 		Auth: Auth{
-			JWT_PrivateKey: getEnvVariable("JWT_PRIVATE_KEY", ""),
-			SecretToken:    getEnvVariable("SECRET_TOKEN", ""),
+			JWTInHousePrivateKey: getEnvVariable("JWT_PRIVATE_KEY", ""),
+			SecretToken:          getEnvVariable("SECRET_TOKEN", ""),
+			OidcURL:              getEnvVariable("OIDC_URL", ""),
+			ClientID:             getEnvVariable("CLIENT_ID", ""),
+			ClientSecret:         getEnvVariable("CLIENT_SECRET", ""),
 		},
-		HttpsCert: HttpsCert{
+		HTTPSCert: HTTPSCert{
 			CertFilePath: getEnvVariable("HTTPS_CERT_FILE_PATH", ""),
 			KeyFilePath:  getEnvVariable("HTTPS_KEY_FILE_PATH", ""),
 		},

@@ -1,15 +1,19 @@
 package auth
 
 import (
+	"bytes"
 	"context"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/pem"
 	"fmt"
 	"go-graphql-mongo-server/config"
 	"go-graphql-mongo-server/logger"
 	"go-graphql-mongo-server/models"
+	"math/big"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -19,7 +23,7 @@ import (
 func GenerateToken(token *models.Token) error {
 	token.CreatedAt = time.Now()
 	newToken := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
-		"user":      token.UserName,
+		"sub":       token.UserName,
 		"tokenName": token.TokenName,
 		"exp":       token.ExpiresAt.Unix(),
 		"iat":       token.CreatedAt.Unix(),
@@ -38,7 +42,7 @@ func GenerateToken(token *models.Token) error {
 
 func getPrivateKey() *rsa.PrivateKey {
 
-	privateKeyString := config.ConfigManager.JWT_PrivateKey
+	privateKeyString := config.Store.JWTInHousePrivateKey
 
 	if privateKeyString == "" {
 		logger.Log.Error("JWT Private Key is not configured")
@@ -61,8 +65,8 @@ func getPrivateKey() *rsa.PrivateKey {
 
 }
 
-func validateJwtInHouse(token *jwt.Token, tokenString string, ctx context.Context) (interface{}, error) {
-	logger.Log.Info("Validating JWT token for Inhouse flow")
+func validateJwtInHouse(ctx context.Context, token *jwt.Token, tokenString string) (interface{}, error) {
+	logger.Log.Info("Validating JWT token for In-house flow")
 	pubKey := getPrivateKey().Public()
 
 	// Check for signing method
@@ -74,8 +78,8 @@ func validateJwtInHouse(token *jwt.Token, tokenString string, ctx context.Contex
 	// Verify token in db
 	tokenHash := sha256.Sum256([]byte(tokenString))
 	claims, ok := token.Claims.(jwt.MapClaims)
-	if ok && claims["user"] != nil {
-		userName := claims["user"].(string)
+	if ok && claims["sub"] != nil {
+		userName := claims["sub"].(string)
 		if models.IsExist(
 			models.TokenCollection,
 			bson.M{
@@ -89,4 +93,77 @@ func validateJwtInHouse(token *jwt.Token, tokenString string, ctx context.Contex
 	}
 
 	return nil, fmt.Errorf("invalid token")
+}
+
+func validateOIDCToken(_ context.Context, token *jwt.Token, _ string) (interface{}, error) {
+
+	logger.Log.Info("Validating JWT token for OIDC flow")
+
+	// Check for signing method
+	if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+		logger.Log.Error("Invalid JWT token")
+		return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+
+	if !ok ||
+		claims["aud"].(string) != config.Store.Auth.ClientID ||
+		claims["iss"].(string) != config.Store.Auth.OidcURL ||
+		claims["sub"] == nil {
+
+		return nil, fmt.Errorf("invalid claims")
+	}
+
+	return retrievePublicKey(token.Header["kid"].(string))
+}
+
+func retrievePublicKey(kid string) (*rsa.PublicKey, error) {
+	var retry int
+	for retry < 3 {
+		pubKey, found := publicKeysMap[kid]
+		if found {
+			return &pubKey.Key, nil
+		}
+		logger.Log.Info("Retry retrieving public key from OIDC")
+		retry++
+		RefreshOIDCInfo()
+	}
+	return &rsa.PublicKey{}, fmt.Errorf("public key with kid = %v not found", kid)
+}
+
+func generateRSAPublicKey(nStr string, eStr string) (rsa.PublicKey, error) {
+
+	decN, err := base64.RawURLEncoding.DecodeString(nStr)
+	if err != nil {
+		return rsa.PublicKey{}, err
+	}
+	n := big.NewInt(0)
+	n.SetBytes(decN)
+
+	decE, err := base64.RawURLEncoding.DecodeString(eStr)
+	if err != nil {
+		return rsa.PublicKey{}, err
+	}
+	var eBytes []byte
+	if len(decE) < 8 {
+		eBytes = make([]byte, 8-len(decE), 8)
+		eBytes = append(eBytes, decE...)
+	} else {
+		eBytes = decE
+	}
+
+	eReader := bytes.NewReader(eBytes)
+	var e uint64
+	err = binary.Read(eReader, binary.BigEndian, &e)
+	if err != nil {
+		return rsa.PublicKey{}, err
+	}
+
+	pKey := rsa.PublicKey{
+		N: n,
+		E: int(e),
+	}
+
+	return pKey, nil
 }
