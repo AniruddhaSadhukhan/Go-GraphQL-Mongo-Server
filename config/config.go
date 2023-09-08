@@ -55,6 +55,7 @@ func InitializeConfig(e venv.Env) {
 }
 
 func readConfigValues() Configurations {
+	//nolint:goconst
 	return Configurations{
 		Database: Database{
 			Host:               getEnvVariable("DB_HOST", ""),
@@ -74,6 +75,7 @@ func readConfigValues() Configurations {
 		HTTPSCert: HTTPSCert{
 			CertFilePath: getEnvVariable("HTTPS_CERT_FILE_PATH", ""),
 			KeyFilePath:  getEnvVariable("HTTPS_KEY_FILE_PATH", ""),
+			HTTPSEnabled: getEnvVariable("HTTPS_ENABLED", "false") == "true",
 		},
 		ProductionMode:    getEnvVariable("PRODUCTION_MODE", "true") == "true",
 		CORSAllowOrigins:  getEnvVariable("CORS_ALLOW_ORIGINS", ""),
