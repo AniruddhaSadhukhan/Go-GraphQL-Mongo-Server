@@ -1,6 +1,6 @@
 # Go-GraphQL-Mongo-Server
 
-A sample server in Go language that exposes GraphQL APIs and connects to a MongoDB
+A sample server in Go language that exposes GraphQL APIs and connects to a MongoDB with features like GraphiQl IDE, OIDC/OAUTH & Personal Access Token Authentication, Rate Limiting, Prometheus Metrics, Health Check, Dynamic Configuration, Logging, Database Migration, Cron Jobs, Negroni Middlewares, HTTPS Support, Telemetry, GraphQl Sanitizer, Cache etc.
 
 ## Major Features
 
