@@ -13,7 +13,7 @@ var ErrUnauthorized = fmt.Errorf("unauthorized access: you don't have permission
 const userNameRegex = "^[a-zA-Z]{2}\\d{5}$"
 
 func GetUserName(p graphql.ResolveParams) string {
-	return p.Context.Value("User").(string)
+	return p.Context.Value(models.UserContextKey).(string)
 }
 
 func GetTokenUserName(p graphql.ResolveParams) string {

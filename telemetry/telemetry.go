@@ -51,7 +51,7 @@ func LogGraphQlCall(params graphql.ResolveParams, graphQlError error) {
 	name := params.Info.FieldName
 	username := common.GetUserName(params)
 
-	logger.Log.Info("[GraphQl] %v '%v' called by %v", operation, name, username)
+	logger.Log.Infof("[GraphQl] %v '%v' called by %v", operation, name, username)
 	if graphQlError != nil {
 		logger.Log.Errorf("[GraphQl] %v '%v' error: %v", operation, name, graphQlError)
 	}

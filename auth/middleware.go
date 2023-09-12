@@ -55,6 +55,10 @@ func retrieveFromURL(url string) ([]byte, error) {
 
 func RefreshOIDCInfo() {
 
+	if !config.Store.Auth.OidcEnabled {
+		return
+	}
+
 	body, err := retrieveFromURL(config.Store.Auth.OidcURL + "/.well-known/openid-configuration")
 	if err != nil {
 		logger.Log.Errorf("Error in retrieving OIDC info: %v", err)
@@ -106,7 +110,7 @@ func RefreshOIDCInfo() {
 
 func Middleware(next http.Handler) http.Handler {
 
-	if len(oidcInfo.JwksURI) == 0 || len(publicKeysMap) == 0 {
+	if config.Store.Auth.OidcEnabled && (len(oidcInfo.JwksURI) == 0 || len(publicKeysMap) == 0) {
 		logger.Log.Info("No OIDC info found")
 		RefreshOIDCInfo()
 	}
@@ -162,14 +166,18 @@ func validateToken(tokenString string, next http.Handler, w http.ResponseWriter,
 
 func parseToken(ctx context.Context, tokenString string) (*jwt.Token, error) {
 
-	parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	parsedToken, err := jwt.Parse(tokenString, func(token *jwt.Token) (pubKey interface{}, err error) {
 
-		pubKey, err := validateOIDCToken(ctx, token, tokenString)
-		if err != nil {
-			pubKey, err = validateJwtInHouse(ctx, token, tokenString)
+		if config.Store.Auth.OidcEnabled {
+			pubKey, err = validateOIDCToken(ctx, token, tokenString)
+			if err == nil {
+				return
+			}
 		}
 
-		return pubKey, err
+		pubKey, err = validateJwtInHouse(ctx, token, tokenString)
+
+		return
 	})
 
 	return parsedToken, err

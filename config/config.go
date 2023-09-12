@@ -34,6 +34,7 @@ type Auth struct {
 	SecretToken string
 
 	// OIDC related configs
+	OidcEnabled  bool
 	OidcURL      string
 	ClientID     string
 	ClientSecret string
@@ -69,13 +70,14 @@ func readConfigValues() Configurations {
 			JWTInHousePrivateKey: getEnvVariable("JWT_PRIVATE_KEY", ""),
 			SecretToken:          getEnvVariable("SECRET_TOKEN", ""),
 			OidcURL:              getEnvVariable("OIDC_URL", ""),
+			OidcEnabled:          getEnvVariable("OIDC_URL", "") != "",
 			ClientID:             getEnvVariable("CLIENT_ID", ""),
 			ClientSecret:         getEnvVariable("CLIENT_SECRET", ""),
 		},
 		HTTPSCert: HTTPSCert{
 			CertFilePath: getEnvVariable("HTTPS_CERT_FILE_PATH", ""),
 			KeyFilePath:  getEnvVariable("HTTPS_KEY_FILE_PATH", ""),
-			HTTPSEnabled: getEnvVariable("HTTPS_ENABLED", "false") == "true",
+			HTTPSEnabled: getEnvVariable("HTTPS_CERT_FILE_PATH", "") != "",
 		},
 		ProductionMode:    getEnvVariable("PRODUCTION_MODE", "true") == "true",
 		CORSAllowOrigins:  getEnvVariable("CORS_ALLOW_ORIGINS", ""),
