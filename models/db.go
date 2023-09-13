@@ -89,9 +89,9 @@ func Insert(ctx context.Context, collectionName string, document interface{}) er
 
 }
 
-func InsertMany(ctx context.Context, collectionName string, documents []interface{}) error {
+func InsertMany(ctx context.Context, collectionName string, documents []interface{}, opts ...*options.InsertManyOptions) error {
 
-	_, err := getCollection(collectionName).InsertMany(ctx, documents)
+	_, err := getCollection(collectionName).InsertMany(ctx, documents, opts...)
 	if err != nil {
 		logger.Log.Error("Error inserting documents: " + err.Error())
 	}

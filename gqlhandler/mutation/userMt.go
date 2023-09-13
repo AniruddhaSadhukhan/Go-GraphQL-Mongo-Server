@@ -33,9 +33,6 @@ var UserMutation = &graphql.Field{
 
 		defer telemetry.LogGraphQlCall(p, e)
 
-		userName := common.GetUserName(p)
-		logger.Log.Info("Mutation: User called by " + userName)
-
 		var userInput []models.User
 
 		//Decode input to UserInput
